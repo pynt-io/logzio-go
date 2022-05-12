@@ -162,7 +162,6 @@ This project is licensed under the Apache License - see the [LICENSE](LICENSE) f
 - v1.0.5
     - Change `token` query parameter to optional for generic use
     - Changed logging levels
-    - Update goleveldb version
 - v1.0.4
     - Update gopsutil version (v3.21.6 -> v3.22.3)
 - v1.0.3
