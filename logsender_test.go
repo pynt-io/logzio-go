@@ -718,13 +718,13 @@ func TestLogzioSender_E2E(t *testing.T) {
 		SetDebug(os.Stderr),
 	)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	msg := `{"traceID":"0000000000000001","operationName":"o3","spanID":"2a3ad4a54c048830","references":[],"startTime":1632401226891238,"startTimeMillis":1632401226891,"duration":0,"logs":[],"process":{"serviceName":"testService","tags":[]},"type":"jaegerSpan"}`
 	for i := 0; i < 10000; i++ {
-		err := l.Send([]byte(msg))
+		err = l.Send([]byte(msg))
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 	}
 	time.Sleep(time.Second * 40)
