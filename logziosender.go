@@ -172,10 +172,10 @@ func SetTempDirectory(dir string) SenderOptionFunc {
 // SetUrl set the url which maybe different from the defaultUrl
 func SetUrl(url string) SenderOptionFunc {
 	return func(l *LogzioSender) error {
+		l.url = url
 		if l.token != "" {
 			l.url = fmt.Sprintf("%s/?token=%s", url, l.token)
 		}
-		l.url = url
 		l.debugLog("sender: Setting url to %s\n", l.url)
 		return nil
 	}

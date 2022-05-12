@@ -28,6 +28,37 @@ const (
 	defaultQueueSize = 40 * 1024 * 1024
 )
 
+func TestLogzioSender_SetUrl(t *testing.T) {
+	l, err := New(
+		"",
+		SetDebug(os.Stderr),
+		SetUrl("http://localhost:12345"),
+		SetInMemoryQueue(true),
+		SetinMemoryCapacity(500),
+		SetDrainDuration(time.Minute),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l.url != "http://localhost:12345" {
+		t.Fatalf("url should be http://localhost:12345, actual: %s", l.url)
+	}
+	l2, err := New(
+		"token",
+		SetDebug(os.Stderr),
+		SetUrl("http://localhost:12345"),
+		SetInMemoryQueue(true),
+		SetinMemoryCapacity(500),
+		SetDrainDuration(time.Minute),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l2.url != "http://localhost:12345/?token=token" {
+		t.Fatalf("url should be http://localhost:12345/?token=token, actual: %s", l.url)
+	}
+}
+
 // In memory queue tests
 func TestLogzioSender_inMemoryRetries(t *testing.T) {
 	var sent = make([]byte, 1024)
