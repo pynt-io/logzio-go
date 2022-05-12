@@ -93,9 +93,7 @@ func TestLogzioSender_InMemoryCapacityLimit(t *testing.T) {
 
 func TestLogzioSender_InMemorySend(t *testing.T) {
 	var sent = make([]byte, 1024)
-	var sentToken string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sentToken = r.URL.Query().Get("token")
 		w.WriteHeader(http.StatusOK)
 		r.Body.Read(sent)
 	}))
@@ -117,9 +115,6 @@ func TestLogzioSender_InMemorySend(t *testing.T) {
 	}
 	l.Drain()
 	time.Sleep(200 * time.Millisecond)
-	if sentToken != "fake-token" {
-		t.Fatalf("token not sent %s", sentToken)
-	}
 	item, err := l.queue.Dequeue()
 	if item != nil {
 		t.Fatalf("Unexpect item in the queue - %s", string(item.Value))
@@ -129,9 +124,7 @@ func TestLogzioSender_InMemorySend(t *testing.T) {
 
 func TestLogzioSender_InMemoryDrain(t *testing.T) {
 	var sent = make([]byte, 1024)
-	var sentToken string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sentToken = r.URL.Query().Get("token")
 		w.WriteHeader(http.StatusOK)
 		r.Body.Read(sent)
 	}))
@@ -152,9 +145,6 @@ func TestLogzioSender_InMemoryDrain(t *testing.T) {
 	}
 	l.Drain()
 	time.Sleep(time.Second * 10)
-	if sentToken != "fake-token" {
-		t.Fatalf("token not sent %s", sentToken)
-	}
 	item, err := l.queue.Dequeue()
 	if item != nil {
 		t.Fatalf("Unexpect item in the queue - %s", string(item.Value))
@@ -378,9 +368,7 @@ func TestLogzioSender_Retries(t *testing.T) {
 
 func TestLogzioSender_Send(t *testing.T) {
 	var sent = make([]byte, 1024)
-	var sentToken string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sentToken = r.URL.Query().Get("token")
 		w.WriteHeader(http.StatusOK)
 		r.Body.Read(sent)
 	}))
@@ -402,9 +390,7 @@ func TestLogzioSender_Send(t *testing.T) {
 	if sentMsg != "blah\n" {
 		t.Fatalf("%s != %s ", sent, sentMsg)
 	}
-	if sentToken != "fake-token" {
-		t.Fatalf("token not sent %s", sentToken)
-	}
+
 }
 
 func TestLogzioSender_DelayStart(t *testing.T) {
@@ -614,7 +600,7 @@ func TestLogzioSender_CountDropped(t *testing.T) {
 	if l.droppedLogs != 3 {
 		t.Fatalf("items should have been dropped")
 	}
-	l.diskThreshold = 95
+	l.diskThreshold = 98
 	l.Send([]byte("blah"))
 	l.Send([]byte("blah"))
 	l.Drain()
