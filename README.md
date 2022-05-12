@@ -142,7 +142,7 @@ $ go test -v
 
 ## Authors
 
-* **Douglas Chimento**  - [dougEfresh][me]
+* **Douglas Chimento**  - [dougEfresh](https://github.com/dougEfresh)
 * **Ido Halevi**  - [idohalevi](https://github.com/idohalevi)
 
 ## Maintainers
