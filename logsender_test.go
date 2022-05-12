@@ -28,6 +28,37 @@ const (
 	defaultQueueSize = 40 * 1024 * 1024
 )
 
+func TestLogzioSender_SetUrl(t *testing.T) {
+	l, err := New(
+		"",
+		SetDebug(os.Stderr),
+		SetUrl("http://localhost:12345"),
+		SetInMemoryQueue(true),
+		SetinMemoryCapacity(500),
+		SetDrainDuration(time.Minute),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l.url != "http://localhost:12345" {
+		t.Fatalf("url should be http://localhost:12345, actual: %s", l.url)
+	}
+	l2, err := New(
+		"token",
+		SetDebug(os.Stderr),
+		SetUrl("http://localhost:12345"),
+		SetInMemoryQueue(true),
+		SetinMemoryCapacity(500),
+		SetDrainDuration(time.Minute),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l2.url != "http://localhost:12345/?token=token" {
+		t.Fatalf("url should be http://localhost:12345/?token=token, actual: %s", l.url)
+	}
+}
+
 // In memory queue tests
 func TestLogzioSender_inMemoryRetries(t *testing.T) {
 	var sent = make([]byte, 1024)
@@ -93,9 +124,7 @@ func TestLogzioSender_InMemoryCapacityLimit(t *testing.T) {
 
 func TestLogzioSender_InMemorySend(t *testing.T) {
 	var sent = make([]byte, 1024)
-	var sentToken string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sentToken = r.URL.Query().Get("token")
 		w.WriteHeader(http.StatusOK)
 		r.Body.Read(sent)
 	}))
@@ -117,9 +146,6 @@ func TestLogzioSender_InMemorySend(t *testing.T) {
 	}
 	l.Drain()
 	time.Sleep(200 * time.Millisecond)
-	if sentToken != "fake-token" {
-		t.Fatalf("token not sent %s", sentToken)
-	}
 	item, err := l.queue.Dequeue()
 	if item != nil {
 		t.Fatalf("Unexpect item in the queue - %s", string(item.Value))
@@ -129,9 +155,7 @@ func TestLogzioSender_InMemorySend(t *testing.T) {
 
 func TestLogzioSender_InMemoryDrain(t *testing.T) {
 	var sent = make([]byte, 1024)
-	var sentToken string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sentToken = r.URL.Query().Get("token")
 		w.WriteHeader(http.StatusOK)
 		r.Body.Read(sent)
 	}))
@@ -152,9 +176,6 @@ func TestLogzioSender_InMemoryDrain(t *testing.T) {
 	}
 	l.Drain()
 	time.Sleep(time.Second * 10)
-	if sentToken != "fake-token" {
-		t.Fatalf("token not sent %s", sentToken)
-	}
 	item, err := l.queue.Dequeue()
 	if item != nil {
 		t.Fatalf("Unexpect item in the queue - %s", string(item.Value))
@@ -378,9 +399,7 @@ func TestLogzioSender_Retries(t *testing.T) {
 
 func TestLogzioSender_Send(t *testing.T) {
 	var sent = make([]byte, 1024)
-	var sentToken string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sentToken = r.URL.Query().Get("token")
 		w.WriteHeader(http.StatusOK)
 		r.Body.Read(sent)
 	}))
@@ -402,9 +421,7 @@ func TestLogzioSender_Send(t *testing.T) {
 	if sentMsg != "blah\n" {
 		t.Fatalf("%s != %s ", sent, sentMsg)
 	}
-	if sentToken != "fake-token" {
-		t.Fatalf("token not sent %s", sentToken)
-	}
+
 }
 
 func TestLogzioSender_DelayStart(t *testing.T) {
@@ -614,7 +631,7 @@ func TestLogzioSender_CountDropped(t *testing.T) {
 	if l.droppedLogs != 3 {
 		t.Fatalf("items should have been dropped")
 	}
-	l.diskThreshold = 95
+	l.diskThreshold = 98
 	l.Send([]byte("blah"))
 	l.Send([]byte("blah"))
 	l.Drain()
@@ -718,13 +735,13 @@ func TestLogzioSender_E2E(t *testing.T) {
 		SetDebug(os.Stderr),
 	)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	msg := `{"traceID":"0000000000000001","operationName":"o3","spanID":"2a3ad4a54c048830","references":[],"startTime":1632401226891238,"startTimeMillis":1632401226891,"duration":0,"logs":[],"process":{"serviceName":"testService","tags":[]},"type":"jaegerSpan"}`
 	for i := 0; i < 10000; i++ {
-		err := l.Send([]byte(msg))
+		err = l.Send([]byte(msg))
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 	}
 	time.Sleep(time.Second * 40)
