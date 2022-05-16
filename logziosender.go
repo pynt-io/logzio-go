@@ -245,7 +245,7 @@ func (l *LogzioSender) isEnoughDiskSpace() bool {
 func (l *LogzioSender) isEnoughMemory(dataSize uint64) bool {
 	usage := l.queue.Length()
 	if usage+dataSize >= l.inMemoryCapacity {
-		l.infoLog("sender: Dropping logs, the max capacity is %d and %d is requested, Request size: %d\n", l.inMemoryCapacity, usage+dataSize, dataSize)
+		l.debugLog("sender: Dropping logs, the max capacity is %d and %d is requested, Request size: %d\n", l.inMemoryCapacity, usage+dataSize, dataSize)
 		l.droppedLogs++
 		return false
 	} else {
@@ -294,10 +294,10 @@ func (l *LogzioSender) makeHttpRequest(data bytes.Buffer, attempt int, c bool) i
 	if c {
 		req.Header.Add("Content-Encoding", "gzip")
 	}
-	l.infoLog("sender: Sending bulk of %v bytes\n", l.buf.Len())
+	l.debugLog("sender: Sending bulk of %v bytes\n", l.buf.Len())
 	resp, err := l.httpClient.Do(req)
 	if err != nil {
-		l.infoLog("sender: Error sending logs to %s %s\n", l.url, err)
+		l.debugLog("sender: Error sending logs to %s %s\n", l.url, err)
 		return httpError
 	}
 
@@ -305,9 +305,9 @@ func (l *LogzioSender) makeHttpRequest(data bytes.Buffer, attempt int, c bool) i
 	statusCode := resp.StatusCode
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		l.infoLog("sender: Error reading response body: %v", err)
+		l.debugLog("sender: Error reading response body: %v", err)
 	}
-	l.infoLog("sender: Response status code: %v \n", statusCode)
+	l.debugLog("sender: Response status code: %v \n", statusCode)
 	if statusCode == 200 {
 		l.droppedLogs = 0
 	}
@@ -338,16 +338,16 @@ func (l *LogzioSender) shouldRetry(statusCode int) bool {
 	retry := true
 	switch statusCode {
 	case http.StatusBadRequest:
-		l.infoLog("sender: Got HTTP %d bad request, skip retry\n", statusCode)
+		l.debugLog("sender: Got HTTP %d bad request, skip retry\n", statusCode)
 		retry = false
 	case http.StatusNotFound:
-		l.infoLog("sender: Got HTTP %d not found, skip retry\n", statusCode)
+		l.debugLog("sender: Got HTTP %d not found, skip retry\n", statusCode)
 		retry = false
 	case http.StatusUnauthorized:
-		l.infoLog("sender: Got HTTP %d unauthorized, skip retry\n", statusCode)
+		l.debugLog("sender: Got HTTP %d unauthorized, skip retry\n", statusCode)
 		retry = false
 	case http.StatusForbidden:
-		l.infoLog("sender: Got HTTP %d forbidden, skip retry\n", statusCode)
+		l.debugLog("sender: Got HTTP %d forbidden, skip retry\n", statusCode)
 		retry = false
 	case http.StatusOK:
 		retry = false
@@ -362,7 +362,6 @@ func (l *LogzioSender) Drain() {
 		return
 	}
 	l.mux.Lock()
-	l.debugLog("sender: draining queue\n")
 	defer l.mux.Unlock()
 	l.draining.Toggle()
 	defer l.draining.Toggle()
@@ -439,10 +438,6 @@ func (l *LogzioSender) debugLog(format string, a ...interface{}) {
 	if l.debug != nil {
 		fmt.Fprintf(l.debug, format, a...)
 	}
-}
-
-func (l *LogzioSender) infoLog(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, a...)
 }
 
 func (l *LogzioSender) errorLog(format string, a ...interface{}) {
