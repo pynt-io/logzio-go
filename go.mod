@@ -1,4 +1,4 @@
-module github.com/logzio/logzio-go
+module github.com/pynt-io/logzio-go
 
 go 1.15
 
