@@ -19,15 +19,16 @@ import (
 	"compress/gzip"
 	"crypto/tls"
 	"fmt"
-	"github.com/beeker1121/goque"
-	"github.com/logzio/logzio-go/inMemoryQueue"
-	"github.com/shirou/gopsutil/v3/disk"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/beeker1121/goque"
+	"github.com/logzio/logzio-go/inMemoryQueue"
+	"github.com/shirou/gopsutil/v3/disk"
 
 	"go.uber.org/atomic"
 )
@@ -128,6 +129,14 @@ func New(token string, options ...SenderOptionFunc) (*LogzioSender, error) {
 	}
 	go l.start()
 	return l, nil
+}
+
+// SetHttpClient to change the default http client
+func SetHttpClient(client *http.Client) SenderOptionFunc {
+	return func(l *LogzioSender) error {
+		l.httpClient = client
+		return nil
+	}
 }
 
 // SetlogCountLimit to change the default limit
